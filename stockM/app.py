@@ -1,13 +1,22 @@
 import os
 import logging
+from re import A
 from uuid import uuid4
 from dotenv import load_dotenv
 from pathlib import Path
 
-from telegram import InlineQueryResultArticle, ParseMode, \
-    InputTextMessageContent, Update
-from telegram.ext import Updater, InlineQueryHandler, CommandHandler, \
+from telegram import (
+    InlineQueryResultArticle,
+    ParseMode,
+    InputTextMessageContent,
+    Update
+)
+from telegram.ext import (
+    Updater,
+    InlineQueryHandler,
+    CommandHandler,
     CallbackContext
+)
 from telegram.utils.helpers import escape_markdown
 
 import stockM
@@ -32,39 +41,18 @@ def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         "Hi! Welcome to Stock Updates Slave. "
         "To start using, use the `/` commands to explore the list of build "
-        "in commands."
+        "in commands.",
     )
 
 
-def get_price_change(update: Update, context: CallbackContext) -> None:
-    stockM.get_price_change()
-    return
-
-
-def inlinequery(update: Update, context: CallbackContext) -> None:
-    """Handle the inline query."""
-    query = update.inline_query.query
-    results = [
-        InlineQueryResultArticle(
-            id=uuid4(), title="Caps", input_message_content=InputTextMessageContent(query.upper())
-        ),
-        InlineQueryResultArticle(
-            id=uuid4(),
-            title="Bold",
-            input_message_content=InputTextMessageContent(
-                f"*{escape_markdown(query)}*", parse_mode=ParseMode.MARKDOWN
-            ),
-        ),
-        InlineQueryResultArticle(
-            id=uuid4(),
-            title="Italic",
-            input_message_content=InputTextMessageContent(
-                f"_{escape_markdown(query)}_", parse_mode=ParseMode.MARKDOWN
-            ),
-        ),
-    ]
-
-    update.inline_query.answer(results)
+def get_px_change(update: Update, context: CallbackContext) -> None:
+    stocks = update.message.text.split("/get_px_change")[1].strip()
+    stocks = stocks.split()
+    for _, stock in enumerate(stocks):
+        pct_chng = stockM.Ticker(stock).get_price_change()
+        update.message.reply_text(
+            f"{stock} changed by {pct_chng}%"
+        )
 
 
 def main() -> None:
@@ -75,10 +63,8 @@ def main() -> None:
 
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("get_px_change", get_px_change))
     # dispatcher.add_handler(CommandHandler("help", help_command))
-
-    # on noncommand i.e message - echo the message on Telegram
-    dispatcher.add_handler(InlineQueryHandler(inlinequery))
 
     # Start the Bot
     updater.start_polling()
