@@ -20,7 +20,7 @@ from telegram.ext import (
 )
 from telegram.utils.helpers import escape_markdown
 
-import stockM
+from stockM import Ticker
 
 # Enable logging
 logging.basicConfig(
@@ -31,8 +31,10 @@ logging.basicConfig(
 env_path = Path(".") / ".env"
 load_dotenv(dotenv_path=env_path, verbose=True)
 logger = logging.getLogger(__name__)
+
 TOKEN = os.getenv("TOKEN")
 DEFAULT_PORT = oc.load("config.yml")["DEFAULT_PORT"]
+VERB = ["rose", "fell"]
 
 
 # Define a few command handlers. These usually take the two arguments update
@@ -51,10 +53,10 @@ def get_px_change(update: Update, context: CallbackContext) -> None:
     stocks = update.message.text.split("/get_px_change")[1].strip()
     stocks = stocks.split()
     for _, stock in enumerate(stocks):
-        pct_chng = stockM.Ticker(stock).get_price_change()
+        pct_chng = Ticker.get_price_change(stock)
         if isinstance(pct_chng, float):
             update.message.reply_text(
-                f"{stock} changed by {pct_chng}%"
+                f"{stock} {VERB[int(pct_chng < 0)]} by {pct_chng}%"
             )
         else:
             update.message.reply_text(f"{pct_chng}")
@@ -62,10 +64,10 @@ def get_px_change(update: Update, context: CallbackContext) -> None:
 
 def get_default_port(update: Update, context: CallbackContext) -> None:
     for _, stock in enumerate(DEFAULT_PORT):
-        pct_chng = stockM.Ticker(stock).get_price_change()
+        pct_chng = Ticker.get_price_change(stock)
         if isinstance(pct_chng, float):
             update.message.reply_text(
-                f"{stock} changed by {pct_chng}%"
+                f"{stock} {VERB[int(pct_chng < 0)]} by {pct_chng}%"
             )
         else:
             update.message.reply_text(f"{pct_chng}") 
