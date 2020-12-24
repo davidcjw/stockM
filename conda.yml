@@ -1,0 +1,12 @@
+name: yfinance
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.8.0
+  - pip=20.2.3
+  - pandas==1.0.1
+  - numpy==1.18.1
+  - pip:
+    - python-dotenv==0.15.0
+    - python-telegram-bot==13.1
