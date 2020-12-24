@@ -5,6 +5,7 @@ from uuid import uuid4
 from dotenv import load_dotenv
 from pathlib import Path
 
+from omegaconf import OmegaConf as oc
 from telegram import (
     InlineQueryResultArticle,
     ParseMode,
@@ -27,10 +28,11 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-logger = logging.getLogger(__name__)
 env_path = Path(".") / ".env"
 load_dotenv(dotenv_path=env_path, verbose=True)
+logger = logging.getLogger(__name__)
 TOKEN = os.getenv("TOKEN")
+DEFAULT_PORT = oc.load("config.yml")["DEFAULT_PORT"]
 
 
 # Define a few command handlers. These usually take the two arguments update
@@ -58,6 +60,17 @@ def get_px_change(update: Update, context: CallbackContext) -> None:
             update.message.reply_text(f"{pct_chng}")
 
 
+def get_default_port(update: Update, context: CallbackContext) -> None:
+    for _, stock in enumerate(DEFAULT_PORT):
+        pct_chng = stockM.Ticker(stock).get_price_change()
+        if isinstance(pct_chng, float):
+            update.message.reply_text(
+                f"{stock} changed by {pct_chng}%"
+            )
+        else:
+            update.message.reply_text(f"{pct_chng}") 
+
+
 def main() -> None:
     updater = Updater(TOKEN, use_context=True)
 
@@ -67,6 +80,7 @@ def main() -> None:
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("get_px_change", get_px_change))
+    dispatcher.add_handler(CommandHandler("default", get_default_port))
     # dispatcher.add_handler(CommandHandler("help", help_command))
 
     # Start the Bot

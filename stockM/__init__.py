@@ -13,7 +13,7 @@ class Ticker:
         hist = stock.history(period=lookback).Close.values.tolist()
         if len(hist) != int(lookback[0]):
             lookback = f"{int(lookback[0])+1}d"
-            hist = stock.history(period=lookback).Close.values
+            hist = stock.history(period=lookback).Close.values.tolist()
 
         if not hist:
             return f"Couldn't find history for ticker {self.ticker}"
