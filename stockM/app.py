@@ -50,9 +50,12 @@ def get_px_change(update: Update, context: CallbackContext) -> None:
     stocks = stocks.split()
     for _, stock in enumerate(stocks):
         pct_chng = stockM.Ticker(stock).get_price_change()
-        update.message.reply_text(
-            f"{stock} changed by {pct_chng}%"
-        )
+        if isinstance(pct_chng, float):
+            update.message.reply_text(
+                f"{stock} changed by {pct_chng}%"
+            )
+        else:
+            update.message.reply_text(f"{pct_chng}")
 
 
 def main() -> None:
