@@ -70,7 +70,7 @@ def get_default_port(update: Update, context: CallbackContext) -> None:
                 f"{stock} {VERB[int(pct_chng < 0)]} by {pct_chng}%"
             )
         else:
-            update.message.reply_text(f"{pct_chng}") 
+            update.message.reply_text(f"{pct_chng}")
 
 
 def main() -> None:

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 import numpy as np
 
 import yfinance as yf
@@ -8,7 +8,7 @@ import yfinance as yf
 @dataclass
 class Ticker:
 
-    portfolio: Optional[str]
+    portfolio: Optional[List[str]]
 
     def __len__(self):
         return len(self.portfolio)
@@ -35,6 +35,10 @@ class Ticker:
             return f"Couldn't find history for ticker {ticker}"
         pct_chng = ((hist[1] - hist[0]) / hist[0]) * 100
         return np.round(pct_chng, 2)
-    
+
+    @classmethod
+    def construct_portfolio(cls, stocks: List[str]):
+        return cls(stocks)
+
     def get_portfolio_change(self) -> int:
         raise NotImplementedError
