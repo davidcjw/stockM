@@ -2,7 +2,14 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Tuple, List
 import numpy as np
 
+import omegaconf as oc
 import yfinance as yf
+
+TEST_DICT = {
+    "AMZN": 10,
+    "MSFT": 100,
+    "BABA": 10
+}
 
 
 @dataclass
@@ -11,7 +18,8 @@ class Ticker:
     portfolio: Optional[Dict]
 
     def __post_init__(self):
-        if not isinstance(self.portfolio, Dict):
+        if not isinstance(self.portfolio, Dict) and not \
+                isinstance(self.portfolio, oc.dictconfig.DictConfig):
             raise TypeError("portfolio specified should be a dictionary!")
 
     def __len__(self):
@@ -43,7 +51,16 @@ class Ticker:
         return np.round(pct_chng, 2), hist
 
     @classmethod
-    def construct_portfolio(cls, stocks: Dict):
+    def construct_portfolio(cls, stocks: Dict = TEST_DICT):
+        """Class method to init this class. Used mainly for dev
+        purposes to construct an artificial portfolio
+
+        Args:
+            stocks (Dict, optional): Defaults to TEST_DICT.
+
+        Returns:
+            Ticker: instance of this class
+        """
         return cls(stocks)
 
     def get_portfolio_change(self, lookback: str = "2d") -> Tuple[int, float]:
@@ -65,4 +82,5 @@ class Ticker:
         port_change = new_port_val - original_port_val
         pct_port_change = (port_change / original_port_val) * 100
 
-        return port_change, pct_port_change
+        return np.round(port_change, 2), np.round(pct_port_change, 2), \
+            int(new_port_val)

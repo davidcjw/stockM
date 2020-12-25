@@ -63,6 +63,9 @@ def get_px_change(update: Update, context: CallbackContext) -> None:
 
 
 def get_default_port(update: Update, context: CallbackContext) -> None:
+    port = Ticker(DEFAULT_PORT)
+
+    # Stock level updates
     for _, stock in enumerate(DEFAULT_PORT):
         pct_chng, _ = Ticker.get_price_change(stock)
         if isinstance(pct_chng, float):
@@ -71,6 +74,14 @@ def get_default_port(update: Update, context: CallbackContext) -> None:
             )
         else:
             update.message.reply_text(f"{pct_chng}")
+
+    # Portfolio level updates
+    port_change, pctg_port_change, new_port_val = port.get_portfolio_change()
+    update.message.reply_text(
+        f"Your portfolio of {len(port)} stocks {VERB[int(port_change < 0)]} "
+        f"by {port_change} ({pctg_port_change}%).\n\n Your portfolio value "
+        f"is now {new_port_val}."
+    )
 
 
 def main() -> None:
