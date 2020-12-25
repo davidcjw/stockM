@@ -53,7 +53,7 @@ def get_px_change(update: Update, context: CallbackContext) -> None:
     stocks = update.message.text.split("/get_px_change")[1].strip()
     stocks = stocks.split()
     for _, stock in enumerate(stocks):
-        pct_chng = Ticker.get_price_change(stock)
+        pct_chng, _ = Ticker.get_price_change(stock)
         if isinstance(pct_chng, float):
             update.message.reply_text(
                 f"{stock} {VERB[int(pct_chng < 0)]} by {pct_chng}%"
@@ -64,7 +64,7 @@ def get_px_change(update: Update, context: CallbackContext) -> None:
 
 def get_default_port(update: Update, context: CallbackContext) -> None:
     for _, stock in enumerate(DEFAULT_PORT):
-        pct_chng = Ticker.get_price_change(stock)
+        pct_chng, _ = Ticker.get_price_change(stock)
         if isinstance(pct_chng, float):
             update.message.reply_text(
                 f"{stock} {VERB[int(pct_chng < 0)]} by {pct_chng}%"
