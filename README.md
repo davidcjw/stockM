@@ -10,17 +10,17 @@ Use telegram to get stock updates regarding your portfolio of stocks.
 
 ### Basic Commands
 
-Get price change for a single stock
+1. Get price change for a single stock
 ```
 /get_px_change <ticker>
 ```
 
-Get price change for multiple stocks
+2. Get price change for multiple stocks
 ```
 /get_px_change <ticker1> <ticker2> <ticker3>
 ```
 
-Get price change for your default portfolio of stocks. To do so, a `config.yml` file is required to be at the root of the project folder.
+3. Get price change for your default portfolio of stocks. To do so, a `config.yml` file is required to be at the root of the project folder.
 
 Example `config.yml` file:
 ```
