@@ -1,1 +1,1 @@
-web: python -m stockM.app -p 5000
+web: python -m stockM.app
