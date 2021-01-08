@@ -31,7 +31,7 @@ logging.basicConfig(
 # env_path = Path(".") / ".env"
 # load_dotenv(dotenv_path=env_path, verbose=True)
 
-PORT = int(os.environ.get("PORT", 5000))
+# PORT = int(os.environ.get("PORT", 5000))
 TOKEN = os.getenv("TOKEN")
 DEFAULT_PORT = oc.load("config.yml")["DEFAULT_PORT"]
 VERB = ["rose", "fell"]
