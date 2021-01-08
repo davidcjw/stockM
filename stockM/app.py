@@ -31,7 +31,7 @@ logging.basicConfig(
 # env_path = Path(".") / ".env"
 # load_dotenv(dotenv_path=env_path, verbose=True)
 
-# PORT = int(os.environ.get("PORT", 5000))
+PORT = int(os.environ.get("PORT", 5000))
 TOKEN = os.getenv("TOKEN")
 DEFAULT_PORT = oc.load("config.yml")["DEFAULT_PORT"]
 VERB = ["rose", "fell"]
@@ -98,11 +98,11 @@ def main() -> None:
     # dispatcher.add_handler(CommandHandler("help", help_command))
 
     # Start the Bot
-    updater.start_polling()
-    # updater.start_webhook(listen="0.0.0.0",
-    #                       port=int(PORT),
-    #                       url_path=TOKEN)
-    # updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
+    # updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                          port=int(PORT),
+                          url_path=TOKEN)
+    updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
