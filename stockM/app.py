@@ -1,7 +1,5 @@
 import os
 import logging
-from re import A
-from uuid import uuid4
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -27,6 +25,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+from uuid import uuid4
 
 env_path = Path(".") / ".env"
 load_dotenv(dotenv_path=env_path, verbose=True)
