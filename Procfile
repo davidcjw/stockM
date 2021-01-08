@@ -1,1 +1,1 @@
-web: python -m stockM.app
+worker: python -m stockM.app
