@@ -1,0 +1,1 @@
+web: sh setup.sh && python -m stockM.app
