@@ -34,7 +34,8 @@ Use telegram to get stock updates regarding your portfolio of stocks.
     /default
     ```
 
-### Deployment
+## Deployment using Heroku
+### Via Procfile
 This service is deployed on heroku using the `Procfile` listed in this
 repository. To launch a service of your own, follow these steps:
 
@@ -59,4 +60,19 @@ branches are pushed.
     git push heroku main
     ```
 
+### Via Dockerfile
+Referenced from this [link][2]
+
+```bash
+heroku container:login
+heroku create APP_NAME
+heroku container:push web --app APP_NAME
+heroku container:release web --app APP_NAME
+heroku open
+
+# or can go to the website to manually scale it up
+heroku ps:scale web=1
+```
+
 [1]: https://telegram.org/
+[2]: https://medium.com/@ksashok/containerise-your-python-flask-using-docker-and-deploy-it-onto-heroku-a0b48d025e43
