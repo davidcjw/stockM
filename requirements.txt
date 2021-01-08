@@ -1,7 +1,0 @@
-python==3.8.0
-pip==20.2.3
-pandas==1.0.1
-numpy==1.18.1
-yfinance==0.1.54
-python-dotenv==0.15.0
-python-telegram-bot==13.1
