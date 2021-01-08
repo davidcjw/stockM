@@ -26,13 +26,15 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+# Uncomment this if running locally with a .env file,
+# otherwise ensure that TOKEN has been exported to $PATH
+# env_path = Path(".") / ".env"
+# load_dotenv(dotenv_path=env_path, verbose=True)
+
 PORT = int(os.environ.get("PORT", 5000))
 TOKEN = os.getenv("TOKEN")
 DEFAULT_PORT = oc.load("config.yml")["DEFAULT_PORT"]
 VERB = ["rose", "fell"]
-
-env_path = Path(".") / ".env"
-load_dotenv(dotenv_path=env_path, verbose=True)
 logger = logging.getLogger(__name__)
 
 
@@ -96,7 +98,7 @@ def main() -> None:
     # dispatcher.add_handler(CommandHandler("help", help_command))
 
     # Start the Bot
-    updater.start_polling()
+    # updater.start_polling()
     updater.start_webhook(listen="0.0.0.0",
                           port=int(PORT),
                           url_path=TOKEN)
