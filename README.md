@@ -34,4 +34,29 @@ Use telegram to get stock updates regarding your portfolio of stocks.
     /default
     ```
 
+### Deployment
+This service is deployed on heroku using the `Procfile` listed in this
+repository. To launch a service of your own, follow these steps:
+
+1. Get an account with Heroku and install the heroku-cli
+2. Create a new project
+
+    ```bash
+    heroku create <project_name>
+    ```
+3. To deploy this telegram bot, we need to set the telegram bot token as
+an environment variable.
+
+    ```bash
+    heroku config:set TOKEN=<your_token_number>
+    ```
+
+4. Push the repo to the Heroku remote. Note that heroku will only build
+if you push the main or master branch. No action will be taken if other
+branches are pushed.
+
+    ```bash
+    git push heroku main
+    ```
+
 [1]: https://telegram.org/
