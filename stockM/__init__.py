@@ -46,7 +46,7 @@ class Ticker:
             hist = stock.history(period=lookback).Close.values.tolist()
 
         if not hist:
-            return f"Couldn't find history for ticker {ticker}"
+            return f"Couldn't find history for ticker {ticker}", None
         pct_chng = ((hist[1] - hist[0]) / hist[0]) * 100
         return np.round(pct_chng, 2), hist
 

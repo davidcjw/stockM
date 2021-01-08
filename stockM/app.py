@@ -50,9 +50,13 @@ def start(update: Update, context: CallbackContext) -> None:
     )
 
 
-def get_px_change(update: Update, context: CallbackContext) -> None:
-    stocks = update.message.text.split("/get_px_change")[1].strip()
-    stocks = stocks.split()
+def get_px_change(update: Update,
+                  context: CallbackContext,
+                  stocks: str = None) -> None:
+    if not stocks:
+        stocks = update.message.text.split("/get_px_change")[1].strip()
+        stocks = stocks.split()
+
     for _, stock in enumerate(stocks):
         pct_chng, _ = Ticker.get_price_change(stock)
         if isinstance(pct_chng, float):
@@ -60,6 +64,7 @@ def get_px_change(update: Update, context: CallbackContext) -> None:
                 f"{stock} {VERB[int(pct_chng < 0)]} by {pct_chng}%"
             )
         else:
+            logger.error(f"No history found for {stock}")
             update.message.reply_text(f"{pct_chng}")
 
 
@@ -67,14 +72,7 @@ def get_default_port(update: Update, context: CallbackContext) -> None:
     port = Ticker(DEFAULT_PORT)
 
     # Stock level updates
-    for _, stock in enumerate(DEFAULT_PORT):
-        pct_chng, _ = Ticker.get_price_change(stock)
-        if isinstance(pct_chng, float):
-            update.message.reply_text(
-                f"{stock} {VERB[int(pct_chng < 0)]} by {pct_chng}%"
-            )
-        else:
-            update.message.reply_text(f"{pct_chng}")
+    get_px_change(update, context, DEFAULT_PORT)
 
     # Portfolio level updates
     port_change, pctg_port_change, new_port_val = port.get_portfolio_change()
