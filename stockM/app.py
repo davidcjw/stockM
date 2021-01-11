@@ -7,7 +7,6 @@ from pathlib import Path
 from telegram.ext.messagehandler import MessageHandler
 from dotenv import load_dotenv
 
-from omegaconf import OmegaConf as oc
 from telegram import (
     Update,
     ReplyKeyboardMarkup
@@ -38,7 +37,6 @@ logging.basicConfig(
 
 PORT = int(os.environ.get("PORT", 5000))
 TOKEN = os.getenv("TOKEN")
-DEFAULT_PORT = oc.load("config.yml")["DEFAULT_PORT"]
 VERB = ["rose", "fell"]
 logger = logging.getLogger(__name__)
 

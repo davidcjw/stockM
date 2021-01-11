@@ -12,4 +12,3 @@ dependencies:
     - yfinance==0.1.54
     - python-dotenv==0.15.0
     - python-telegram-bot==13.1
-    - omegaconf==2.0.5
