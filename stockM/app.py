@@ -67,6 +67,8 @@ def get_px_change(update: Update,
             stocks = stocks.split()
     elif type == "conversation":
         stocks = stocks.split()
+        if not stocks:
+            update.message.reply_text("No stocks found!")
 
     for _, stock in enumerate(stocks):
         pct_chng, hist = T.get_price_change(stock)
@@ -106,13 +108,13 @@ def facts_to_str(user_data):
 
 
 def start(update: Update, context: CallbackContext) -> None:
-    reply_text = "Hi! I am your personal stock slave Dobby.\n"
+    reply_text = "Hi! I am your personal stock slave, Dobby 🤖.\n"
     print(context.user_data)
     attr = context.user_data.keys()
     if ("watchlist" not in attr) and ("portfolio" not in attr):
         reply_text += (
             "\nYou have not informed me of your stock portfolio and/or "
-            f"watchlist. What would you like me to do?"
+            f"watchlist."
         )
     else:
         if "watchlist" in attr:
@@ -126,7 +128,7 @@ def start(update: Update, context: CallbackContext) -> None:
                 f"\nYour portfolio is {stocks}"
             )
 
-    reply_text += "\nHow may I be of service today?"
+    reply_text += "\n\nHow may I be of service today?"
     update.message.reply_text(reply_text, reply_markup=markup)
     return CHOOSING
 
