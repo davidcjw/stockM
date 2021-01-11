@@ -18,7 +18,7 @@ from telegram.ext import (
 )
 from telegram.utils.helpers import escape_markdown
 
-from stockM import Ticker
+from stockM import Ticker as T
 
 # Enable logging
 logging.basicConfig(
@@ -58,10 +58,10 @@ def get_px_change(update: Update,
         stocks = stocks.split()
 
     for _, stock in enumerate(stocks):
-        pct_chng, _ = Ticker.get_price_change(stock)
+        pct_chng, hist = T.get_price_change(stock)
         if isinstance(pct_chng, float):
             update.message.reply_text(
-                f"{stock} {VERB[int(pct_chng < 0)]} by {pct_chng}%"
+                f"{stock.upper()} closed at {hist[-1]} ({pct_chng}%)"
             )
         else:
             logger.error(f"No history found for {stock}")
@@ -69,7 +69,7 @@ def get_px_change(update: Update,
 
 
 def get_default_port(update: Update, context: CallbackContext) -> None:
-    port = Ticker(DEFAULT_PORT)
+    port = T(DEFAULT_PORT)
 
     # Stock level updates
     get_px_change(update, context, DEFAULT_PORT)
@@ -96,6 +96,7 @@ def main() -> None:
     # dispatcher.add_handler(CommandHandler("help", help_command))
 
     # Start the Bot
+    # `start_polling` for local dev; webhook for production
     # updater.start_polling()
     updater.start_webhook(listen="0.0.0.0",
                           port=int(PORT),
