@@ -51,7 +51,7 @@ reply_keyboard = [
     ["Portfolio updates", "Watchlist updates"],
     ["Done"]
 ]
-markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 
 
 # Define a few command handlers. These usually take the two arguments update
@@ -126,6 +126,7 @@ def start(update: Update, context: CallbackContext) -> None:
                 f"\nYour portfolio is {stocks}"
             )
 
+    reply_text += "\nHow may I be of service today?"
     update.message.reply_text(reply_text, reply_markup=markup)
     return CHOOSING
 
@@ -135,7 +136,9 @@ def done(update: Update, context: CallbackContext) -> None:
         del context.user_data['choice']
 
     update.message.reply_text(
-        f"Thank you for using Stock Bot Slave 😊 !"
+        f"Thank you for using Stock Bot Slave 😊 ! "
+        f"To update or get updates on your portfolio/watchlist again, "
+        f"please select /start."
     )
     return ConversationHandler.END
 
@@ -191,7 +194,6 @@ def received_information(update: Update, context: CallbackContext) -> None:
     )
 
     return CHOOSING
-
 
 
 def main() -> None:
