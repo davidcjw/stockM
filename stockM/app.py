@@ -13,11 +13,11 @@ from telegram import (
 )
 from telegram.ext import (
     Updater,
-    InlineQueryHandler,
     CommandHandler,
-    CallbackContext
+    CallbackContext,
+    PicklePersistence,
+    ConversationHandler
 )
-from telegram.utils.helpers import escape_markdown
 
 from stockM import Ticker as T
 
@@ -86,12 +86,25 @@ def get_default_port(update: Update, context: CallbackContext) -> None:
 
 
 def main() -> None:
-    updater = Updater(TOKEN, use_context=True)
+    pp = PicklePersistence(filename="conversationbot")
+    updater = Updater(TOKEN, persistence=pp, use_context=True)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
+    # Add conversation handler to ask for user's stock portfolio/watchlist
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start)],
+        states={
+            "test": 1
+        },
+        fallbacks=[],
+        name="get_portfolio",
+        persistent=True
+    )
+
     # on different commands - answer in Telegram
+    dispatcher.add_handler(conv_handler)
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("get_px_change", get_px_change))
     dispatcher.add_handler(CommandHandler("default", get_default_port))
