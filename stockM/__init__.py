@@ -75,12 +75,11 @@ class Ticker:
         """
         original_port_val, new_port_val = 0, 0
         for ticker, holdings in self.portfolio.items():
-            pct_chng, hist = self.get_price_change(ticker, lookback=lookback)
+            _, hist = self.get_price_change(ticker, lookback=lookback)
             original_port_val += holdings * hist[0]
             new_port_val += holdings * hist[1]
 
         port_change = new_port_val - original_port_val
         pct_port_change = (port_change / original_port_val) * 100
 
-        return np.round(port_change, 2), np.round(pct_port_change, 2), \
-            int(new_port_val)
+        return port_change, pct_port_change, new_port_val

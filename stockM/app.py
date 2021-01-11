@@ -1,5 +1,6 @@
 import os
 import logging
+import locale
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -20,7 +21,8 @@ from telegram.utils.helpers import escape_markdown
 
 from stockM import Ticker as T
 
-# Enable logging
+# Set locale & enable logging
+locale.setlocale(locale.LC_ALL, '')
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -78,8 +80,8 @@ def get_default_port(update: Update, context: CallbackContext) -> None:
     port_change, pctg_port_change, new_port_val = port.get_portfolio_change()
     update.message.reply_text(
         f"Your portfolio of {len(port)} stocks {VERB[int(port_change < 0)]} "
-        f"by {port_change} ({pctg_port_change}%).\n\n Your portfolio value "
-        f"is now {new_port_val}."
+        f"by {port_change:.2f} ({pctg_port_change:.2f}%).\n\n Your "
+        f"portfolio value is now {int(new_port_val):n}."
     )
 
 
