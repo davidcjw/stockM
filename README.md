@@ -74,5 +74,9 @@ heroku open
 heroku ps:scale web=1
 ```
 
+## References
+1. [Python telegram bot - Persistent Conversation Bot][3]
+
 [1]: https://telegram.org/
 [2]: https://medium.com/@ksashok/containerise-your-python-flask-using-docker-and-deploy-it-onto-heroku-a0b48d025e43
+[3]: https://github.com/python-telegram-bot/python-telegram-bot/blob/master/examples/persistentconversationbot.py
