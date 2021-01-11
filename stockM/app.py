@@ -249,6 +249,10 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("default", get_default_port))
     # dispatcher.add_handler(CommandHandler("help", help_command))
 
+    # Scheduler to send portfolio updates
+    schedule.every().day.at("10:30").do(get_default_port)
+    Thread(target=schedule_checker).start()
+
     # Start the Bot
     # `start_polling` for local dev; webhook for production
     # updater.start_polling()
