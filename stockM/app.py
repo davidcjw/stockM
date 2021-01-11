@@ -1,6 +1,7 @@
 import os
 import logging
 import locale
+from typing import Dict
 from pathlib import Path
 
 from telegram.ext.messagehandler import MessageHandler
@@ -40,24 +41,31 @@ DEFAULT_PORT = oc.load("config.yml")["DEFAULT_PORT"]
 VERB = ["rose", "fell"]
 logger = logging.getLogger(__name__)
 
+CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
+CHOICE_MAP = {
+    "update stock portfolio": "portfolio",
+    "update watchlist": "watchlist"
+}
+reply_keyboard = [
+    ["Update stock portfolio", "Update watchlist"],
+    ["Portfolio updates", "Watchlist updates"],
+    ["Done"]
+]
+markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+
 
 # Define a few command handlers. These usually take the two arguments update
 # and context. Error handlers also receive the raised TelegramError object
 # in error.
-# def start(update: Update, context: CallbackContext) -> None:
-#     """Send a message when the command /start is issued."""
-#     update.message.reply_text(
-#         "Hi! Welcome to Stock Updates Slave. "
-#         "To start using, use the `/` commands to explore the list of build "
-#         "in commands.",
-#     )
-
-
 def get_px_change(update: Update,
                   context: CallbackContext,
-                  stocks: str = None) -> None:
-    if not stocks:
-        stocks = update.message.text.split("/get_px_change")[1].strip()
+                  stocks: str = None,
+                  type: str = "command") -> None:
+    if type == "command":
+        if not stocks:
+            stocks = update.message.text.split("/get_px_change")[1].strip()
+            stocks = stocks.split()
+    elif type == "conversation":
         stocks = stocks.split()
 
     for _, stock in enumerate(stocks):
@@ -71,8 +79,10 @@ def get_px_change(update: Update,
             update.message.reply_text(f"{pct_chng}")
 
 
-def get_default_port(update: Update, context: CallbackContext) -> None:
-    port = T(DEFAULT_PORT)
+def get_default_port(update: Update, context: CallbackContext,
+                     portfolio: Dict = None) -> None:
+    # Set portfolio
+    port = T(portfolio) if portfolio else T(DEFAULT_PORT)
 
     # Stock level updates
     get_px_change(update, context, DEFAULT_PORT)
@@ -94,25 +104,28 @@ def facts_to_str(user_data):
 
     return "\n".join(facts).join(['\n', '\n'])
 
-reply_keyboard = [
-    ["Update stock portfolio", "Update watchlist"],
-    ["Portfolio updates", "Watchlist updates"],
-    ["Check individual stocks", "Done"]
-]
-markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
-CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
+
 def start(update: Update, context: CallbackContext) -> None:
-    reply_text = "Hi! I am your personal stock slave Dobby.\n\n"
+    reply_text = "Hi! I am your personal stock slave Dobby.\n"
     print(context.user_data)
-    if context.user_data:
+    attr = context.user_data.keys()
+    if ("watchlist" not in attr) and ("portfolio" not in attr):
         reply_text += (
-            f"Your stock portfolio is {', '.join(context.user_data.keys())}"
-        )
-    else:
-        reply_text += (
-            "You have not informed me of your stock portfolio and/or "
+            "\nYou have not informed me of your stock portfolio and/or "
             f"watchlist. What would you like me to do?"
         )
+    else:
+        if context.user_data["watchlist"]:
+            stocks = context.user_data["watchlist"]
+            reply_text += (
+                f"\nYour watchlist is {stocks}"
+            )
+        if context.user_data["portfolio"]:
+            stocks = context.user_data["portfolio"]
+            reply_text += (
+                f"\nYour portfolio is {stocks}"
+            )
+
     update.message.reply_text(reply_text, reply_markup=markup)
     return CHOOSING
 
@@ -122,14 +135,14 @@ def done(update: Update, context: CallbackContext) -> None:
         del context.user_data['choice']
 
     update.message.reply_text(
-        "I learned these facts about you:" f"{facts_to_str(context.user_data)}"
+        f"Thank you for using Stock Bot Slave 😊 !"
     )
     return ConversationHandler.END
 
 
 def update_user(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
-    context.user_data['choice'] = text
+    context.user_data['choice'] = CHOICE_MAP[text]
     if context.user_data.get(text):
         reply_text = (
             f'Your {text}, I already know the following about that: '
@@ -151,30 +164,15 @@ def update_user(update: Update, context: CallbackContext) -> None:
 def provide_updates(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
     context.user_data['choice'] = text
-    if context.user_data.get(text):
-        reply_text = (
-            f'Your {text}, I already know the following about that: '
-            f'{context.user_data[text]}'
-        )
-    else:
-        reply_text = (
-            f'You want to {text}? Please let me know of your '
-            f'portfolio/watchlist in the following format: '
-            f'Use ticker(s) only, separated by space. Example:\n\n'
-            f'AMZN TSLA BABA'
-        )
-
-    update.message.reply_text(reply_text)
-
-    return TYPING_REPLY
-
-
-def custom_choice(update: Update, context: CallbackContext) -> None:
+    stocks = context.user_data[text.split()[0]]
+    get_px_change(update=update, context=context, stocks=stocks,
+                  type="conversation")
     update.message.reply_text(
-        'Alright, please send me the category first, ' 'for example "Most impressive skill"'
+        "What would you like to do next?",
+        reply_markup=markup
     )
 
-    return TYPING_CHOICE
+    return CHOOSING
 
 
 def received_information(update: Update, context: CallbackContext) -> None:
@@ -185,8 +183,8 @@ def received_information(update: Update, context: CallbackContext) -> None:
     del context.user_data['choice']
 
     update.message.reply_text(
-        "Neat! Just so you know, this is what you already told me:"
-        f"{facts_to_str(context.user_data)}"
+        "Neat! Just so you know, this is what you already told me:\n"
+        f"{facts_to_str(context.user_data)}\n"
         "You can tell me more, or change your opinion on "
         "something.",
         reply_markup=markup,
@@ -216,18 +214,10 @@ def main() -> None:
                 ),
                 MessageHandler(
                     Filters.regex(
-                        '^Something else...$'
-                        ),
-                    custom_choice
-                ),
-            ],
-            TYPING_CHOICE: [
-                MessageHandler(
-                    Filters.regex(
                         '^(Portfolio updates|Watchlist updates)$'
                         ),
                     provide_updates
-                )
+                ),
             ],
             TYPING_REPLY: [
                 MessageHandler(
