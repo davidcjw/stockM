@@ -3,8 +3,11 @@ import logging
 import locale
 from typing import Dict
 from pathlib import Path
+from threading import Thread
+from time import sleep
 
 from telegram.ext.messagehandler import MessageHandler
+import schedule
 from dotenv import load_dotenv
 
 from omegaconf import OmegaConf as oc
@@ -196,6 +199,10 @@ def received_information(update: Update, context: CallbackContext) -> None:
 
     return CHOOSING
 
+def schedule_checker() -> None:
+    while True:
+        schedule.run_pending()
+        sleep(1)
 
 def main() -> None:
     pp = PicklePersistence(filename="conversationbot")
