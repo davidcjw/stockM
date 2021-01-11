@@ -115,12 +115,12 @@ def start(update: Update, context: CallbackContext) -> None:
             f"watchlist. What would you like me to do?"
         )
     else:
-        if context.user_data["watchlist"]:
+        if "watchlist" in attr:
             stocks = context.user_data["watchlist"]
             reply_text += (
                 f"\nYour watchlist is {stocks}"
             )
-        if context.user_data["portfolio"]:
+        if "portfolio" in attr:
             stocks = context.user_data["portfolio"]
             reply_text += (
                 f"\nYour portfolio is {stocks}"
