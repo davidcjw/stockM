@@ -21,7 +21,6 @@ from telegram.ext import (
 )
 
 from stockM import Ticker as T
-from stockM.utils import get_portfolios
 
 # Set locale & enable logging
 locale.setlocale(locale.LC_ALL, '')
@@ -40,6 +39,10 @@ TOKEN = os.getenv("TOKEN")
 VERB = ["rose", "fell"]
 logger = logging.getLogger(__name__)
 
+DEFAULT_PORT = {
+    "AMZN": 200,
+    "BABA": 50
+}
 CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
 CHOICE_MAP = {
     "update stock portfolio": "portfolio",
@@ -197,9 +200,6 @@ def received_information(update: Update, context: CallbackContext) -> None:
 
 
 def main() -> None:
-    if not os.path.exists("conversationbot"):
-        get_portfolios()
-
     pp = PicklePersistence(filename="conversationbot")
     updater = Updater(TOKEN, persistence=pp, use_context=True)
 
