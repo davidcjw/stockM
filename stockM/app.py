@@ -35,8 +35,8 @@ logging.basicConfig(
 
 # Uncomment this if running locally with a .env file,
 # otherwise ensure that TOKEN has been exported to $PATH
-# env_path = Path(".") / ".env"
-# load_dotenv(dotenv_path=env_path, verbose=True)
+env_path = Path(".") / ".env"
+load_dotenv(dotenv_path=env_path, verbose=True)
 
 PORT = int(os.environ.get("PORT", 5000))
 TOKEN = os.getenv("TOKEN")
@@ -256,10 +256,10 @@ def main() -> None:
     # Start the Bot
     # `start_polling` for local dev; webhook for production
     # updater.start_polling()
-    updater.start_webhook(listen="0.0.0.0",
-                          port=int(PORT),
-                          url_path=TOKEN)
-    updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
+    # updater.start_webhook(listen="0.0.0.0",
+    #                       port=int(PORT),
+    #                       url_path=TOKEN)
+    # updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
