@@ -6,6 +6,7 @@ from pathlib import Path
 
 from telegram.ext.messagehandler import MessageHandler
 from dotenv import load_dotenv
+from sqlalchemy.orm import sessionmaker
 
 from telegram import (
     Update,
@@ -21,6 +22,7 @@ from telegram.ext import (
 )
 
 from stockM import Ticker as T
+from stockM.database import get_user, update_userdb, User
 
 # Set locale & enable logging
 locale.setlocale(locale.LC_ALL, '')
@@ -28,16 +30,16 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+logger = logging.getLogger(__name__)
 
 # Uncomment this if running locally with a .env file,
 # otherwise ensure that TOKEN has been exported to $PATH
-# env_path = Path(".") / ".env"
-# load_dotenv(dotenv_path=env_path, verbose=True)
+env_path = Path(".") / ".env"
+load_dotenv(dotenv_path=env_path, verbose=True)
 
 PORT = int(os.environ.get("PORT", 5000))
 TOKEN = os.getenv("TOKEN")
 VERB = ["rose", "fell"]
-logger = logging.getLogger(__name__)
 
 DEFAULT_PORT = {
     "AMZN": 200,
@@ -68,9 +70,10 @@ def get_px_change(update: Update,
             stocks = update.message.text.split("/get_px_change")[1].strip()
             stocks = stocks.split()
     elif type == "conversation":
-        stocks = stocks.split()
         if not stocks:
             update.message.reply_text("No stocks found!")
+            return
+        stocks = stocks.split()
 
     for _, stock in enumerate(stocks):
         pct_chng, hist = T.get_price_change(stock)
@@ -111,24 +114,21 @@ def facts_to_str(user_data):
 
 def start(update: Update, context: CallbackContext) -> None:
     reply_text = "Hi! I am your personal stock slave, Dobby 🤖.\n"
-    print(context.user_data)
-    attr = context.user_data.keys()
-    if ("watchlist" not in attr) and ("portfolio" not in attr):
+
+    user_id = update.message.from_user["id"]
+    user = get_user(user_id)
+
+    if not user:
         reply_text += (
             "\nYou have not informed me of your stock portfolio and/or "
             f"watchlist."
         )
     else:
-        if "watchlist" in attr:
-            stocks = context.user_data["watchlist"]
-            reply_text += (
-                f"\nYour watchlist is {stocks}"
-            )
-        if "portfolio" in attr:
-            stocks = context.user_data["portfolio"]
-            reply_text += (
-                f"\nYour portfolio is {stocks}"
-            )
+        context.user_data.update(user())
+        reply_text += (
+            f"\nYour watchlist is: {user.watchlist}"
+            f"\nYour portfolio is: {user.portfolio}"
+        )
 
     reply_text += "\n\nHow may I be of service today?"
     update.message.reply_text(reply_text, reply_markup=markup)
@@ -188,6 +188,12 @@ def received_information(update: Update, context: CallbackContext) -> None:
     context.user_data[category] = text.lower()
     del context.user_data['choice']
 
+    # Update the database
+    user = update.message.from_user["id"]
+    user_to_update = User(user_id=user, **context.user_data)
+    logger.info(user_to_update)
+    update_userdb(user_to_update)
+
     update.message.reply_text(
         "Neat! Just so you know, this is what you already told me:\n"
         f"{facts_to_str(context.user_data)}\n"
@@ -200,8 +206,7 @@ def received_information(update: Update, context: CallbackContext) -> None:
 
 
 def main() -> None:
-    pp = PicklePersistence(filename="conversationbot")
-    updater = Updater(TOKEN, persistence=pp, use_context=True)
+    updater = Updater(TOKEN, use_context=True)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
@@ -233,7 +238,6 @@ def main() -> None:
         },
         fallbacks=[MessageHandler(Filters.regex('^Done$'), done)],
         name="get_portfolio",
-        persistent=True,
         allow_reentry=True,
     )
 
@@ -246,11 +250,11 @@ def main() -> None:
 
     # Start the Bot
     # `start_polling` for local dev; webhook for production
-    # updater.start_polling()
-    updater.start_webhook(listen="0.0.0.0",
-                          port=int(PORT),
-                          url_path=TOKEN)
-    updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
+    updater.start_polling()
+    # updater.start_webhook(listen="0.0.0.0",
+    #                       port=int(PORT),
+    #                       url_path=TOKEN)
+    # updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
