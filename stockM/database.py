@@ -65,5 +65,5 @@ def update_userdb(session: Session, user: User) -> None:
         session.add(user)
         session.commit()
         logger.info(f"Successfully updated db with {user}")
-    except:
-        logger.error(f"Failed to update for user {user.user_id}!")
+    except Exception as e:
+        logger.error(f"{e}")
