@@ -2,10 +2,8 @@ import os
 import logging
 import locale
 from typing import Dict
-from pathlib import Path
 
 from telegram.ext.messagehandler import MessageHandler
-from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker
 
 from telegram import (
@@ -21,7 +19,7 @@ from telegram.ext import (
 )
 
 from stockM import Ticker as T
-from stockM.database import get_user, update_userdb, db
+from stockM.database import get_user, update_userdb, db, TOKEN
 
 # Set locale & enable logging
 locale.setlocale(locale.LC_ALL, '')
@@ -31,13 +29,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Uncomment this if running locally with a .env file,
-# otherwise ensure that TOKEN has been exported to $PATH
-# env_path = Path(".") / ".env"
-# load_dotenv(dotenv_path=env_path, verbose=True)
-
 PORT = int(os.environ.get("PORT", 5000))
-TOKEN = os.getenv("TOKEN")
 VERB = ["rose", "fell"]
 
 DEFAULT_PORT = {
@@ -45,6 +37,7 @@ DEFAULT_PORT = {
     "BABA": 50
 }
 CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
+UPDATED = 1
 CHOICE_MAP = {
     "update stock portfolio": "portfolio",
     "update watchlist": "watchlist"
@@ -149,6 +142,10 @@ def done(update: Update, context: CallbackContext) -> None:
 
 
 def update_user(update: Update, context: CallbackContext) -> None:
+    user_id = update.message.from_user["id"]
+    user = get_user(session, user_id)
+    context.user_data.update(user())
+
     text = update.message.text.lower()
     context.user_data['choice'] = CHOICE_MAP[text]
     if context.user_data.get(text):
@@ -169,7 +166,18 @@ def update_user(update: Update, context: CallbackContext) -> None:
     return TYPING_REPLY
 
 
+def clear_portfolio(update: Update, context: CallbackContext):
+    update.message.reply_text(
+        "Your portfolio has been cleared!",
+        reply_markup=markup
+    )
+
+
 def provide_updates(update: Update, context: CallbackContext) -> None:
+    user_id = update.message.from_user["id"]
+    user = get_user(session, user_id)
+    context.user_data.update(user())
+
     text = update.message.text.lower()
     context.user_data['choice'] = text
     stocks = context.user_data[text.split()[0]]
@@ -214,46 +222,73 @@ def main() -> None:
 
     # Add conversation handler to ask for user's stock portfolio/watchlist
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
+        entry_points=[
+            MessageHandler(
+               Filters.regex(
+                '^(Update stock portfolio|Update watchlist)$'
+                ), update_user
+            )
+        ],
         states={
-            CHOOSING: [
+            UPDATED: [
                 MessageHandler(
-                    Filters.regex(
-                        '^(Update stock portfolio|Update watchlist)$'
-                        ),
-                    update_user
-                ),
-                MessageHandler(
-                    Filters.regex(
-                        '^(Portfolio updates|Watchlist updates)$'
-                        ),
-                    provide_updates
-                ),
-            ],
-            TYPING_REPLY: [
-                MessageHandler(
-                    Filters.text & ~(Filters.command | Filters.regex('^Done$')),
-                    received_information,
+                   Filters.text & ~(Filters.command | Filters.regex('^Done$')),
+                   received_information,
                 )
-            ],
+            ]
         },
         fallbacks=[MessageHandler(Filters.regex('^Done$'), done)],
-        name="get_portfolio",
+        name="updates",
         allow_reentry=True,
     )
+    # conv_handler = ConversationHandler(
+    #     entry_points=[CommandHandler("start", start)],
+    #     states={
+    #         CHOOSING: [
+    #             MessageHandler(
+    #                 Filters.regex(
+    #                     '^(Update stock portfolio|Update watchlist)$'
+    #                     ),
+    #                 update_user
+    #             ),
+    #             MessageHandler(
+    #                 Filters.regex(
+    #                     '^(Portfolio updates|Watchlist updates)$'
+    #                     ),
+    #                 provide_updates
+    #             ),
+    #         ],
+    #         TYPING_REPLY: [
+    #             MessageHandler(
+    #                 Filters.text & ~(Filters.command | Filters.regex('^Done$')),
+    #                 received_information,
+    #             )
+    #         ],
+    #     },
+    #     fallbacks=[MessageHandler(Filters.regex('^Done$'), done)],
+    #     name="get_portfolio",
+    #     allow_reentry=True,
+    # )
 
     # on different commands - answer in Telegram
     dispatcher.add_handler(conv_handler)
+    dispatcher.add_handler(
+        MessageHandler(
+            Filters.regex(
+                '^(Portfolio updates|Watchlist updates)$'
+            ), provide_updates
+        )
+    )
     dispatcher.add_handler(CommandHandler("get_px_change", get_px_change))
     dispatcher.add_handler(CommandHandler("default", get_default_port))
 
     # Start the Bot
     # `start_polling` for local dev; webhook for production
-    # updater.start_polling()
-    updater.start_webhook(listen="0.0.0.0",
-                          port=int(PORT),
-                          url_path=TOKEN)
-    updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
+    updater.start_polling()
+    # updater.start_webhook(listen="0.0.0.0",
+    #                       port=int(PORT),
+    #                       url_path=TOKEN)
+    # updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
