@@ -10,7 +10,6 @@ from telegram.ext.messagehandler import MessageHandler
 import schedule
 from dotenv import load_dotenv
 
-from omegaconf import OmegaConf as oc
 from telegram import (
     Update,
     ReplyKeyboardMarkup
@@ -25,6 +24,7 @@ from telegram.ext import (
 )
 
 from stockM import Ticker as T
+from stockM.utils import get_portfolios
 
 # Set locale & enable logging
 locale.setlocale(locale.LC_ALL, '')
@@ -40,7 +40,6 @@ load_dotenv(dotenv_path=env_path, verbose=True)
 
 PORT = int(os.environ.get("PORT", 5000))
 TOKEN = os.getenv("TOKEN")
-DEFAULT_PORT = oc.load("config.yml")["DEFAULT_PORT"]
 VERB = ["rose", "fell"]
 logger = logging.getLogger(__name__)
 
@@ -205,6 +204,9 @@ def schedule_checker() -> None:
         sleep(1)
 
 def main() -> None:
+    if not os.path.exists("conversationbot"):
+        get_portfolios()
+
     pp = PicklePersistence(filename="conversationbot")
     updater = Updater(TOKEN, persistence=pp, use_context=True)
 

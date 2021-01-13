@@ -3,5 +3,7 @@ numpy==1.18.1
 yfinance==0.1.54
 python-dotenv==0.15.0
 python-telegram-bot==13.1
+<<<<<<< HEAD
 omegaconf==2.0.5
 schedule==0.6.0
+boto3==1.16.50

@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Optional, Dict, Tuple, List
 import numpy as np
 
-import omegaconf as oc
 import yfinance as yf
 
 TEST_DICT = {
@@ -18,8 +17,7 @@ class Ticker:
     portfolio: Optional[Dict]
 
     def __post_init__(self):
-        if not isinstance(self.portfolio, Dict) and not \
-                isinstance(self.portfolio, oc.dictconfig.DictConfig):
+        if not isinstance(self.portfolio, Dict):
             raise TypeError("portfolio specified should be a dictionary!")
 
     def __len__(self):
