@@ -4,7 +4,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy import Column, String, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -37,11 +37,7 @@ class User(base):
         }
 
 
-Session = sessionmaker(db)
-session = Session()
-
-
-def get_user(user_id: int) -> User:
+def get_user(session: Session, user_id: int) -> User:
     """Queries a user from the database
 
     Args:
@@ -53,10 +49,13 @@ def get_user(user_id: int) -> User:
     logger.info(f"Retrieving user info for {user_id}")
     curr_user = session.query(User).filter_by(user_id=user_id).first()
 
+    if not curr_user:
+        return User(user_id=user_id)
+
     return curr_user
 
 
-def update_userdb(user: User) -> None:
+def update_userdb(session: Session, user: User) -> None:
     """Creates a User object within session before commit()
 
     Args:

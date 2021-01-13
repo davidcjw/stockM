@@ -16,13 +16,12 @@ from telegram.ext import (
     Updater,
     CommandHandler,
     CallbackContext,
-    PicklePersistence,
     ConversationHandler,
     Filters
 )
 
 from stockM import Ticker as T
-from stockM.database import get_user, update_userdb, User
+from stockM.database import get_user, update_userdb, db
 
 # Set locale & enable logging
 locale.setlocale(locale.LC_ALL, '')
@@ -56,6 +55,8 @@ reply_keyboard = [
     ["Done"]
 ]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
+Session = sessionmaker(db)
+session = Session()
 
 
 # Define a few command handlers. These usually take the two arguments update
@@ -116,9 +117,9 @@ def start(update: Update, context: CallbackContext) -> None:
     reply_text = "Hi! I am your personal stock slave, Dobby 🤖.\n"
 
     user_id = update.message.from_user["id"]
-    user = get_user(user_id)
+    user = get_user(session, user_id)
 
-    if not user:
+    if not (user.portfolio or user.watchlist):
         reply_text += (
             "\nYou have not informed me of your stock portfolio and/or "
             f"watchlist."
@@ -190,9 +191,9 @@ def received_information(update: Update, context: CallbackContext) -> None:
 
     # Update the database
     user = update.message.from_user["id"]
-    user_to_update = User(user_id=user, **context.user_data)
-    logger.info(user_to_update)
-    update_userdb(user_to_update)
+    user_to_update = get_user(session, user)
+    setattr(user_to_update, category, text.lower())
+    update_userdb(session, user_to_update)
 
     update.message.reply_text(
         "Neat! Just so you know, this is what you already told me:\n"
@@ -243,18 +244,16 @@ def main() -> None:
 
     # on different commands - answer in Telegram
     dispatcher.add_handler(conv_handler)
-    # dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("get_px_change", get_px_change))
     dispatcher.add_handler(CommandHandler("default", get_default_port))
-    # dispatcher.add_handler(CommandHandler("help", help_command))
 
     # Start the Bot
     # `start_polling` for local dev; webhook for production
-    updater.start_polling()
-    # updater.start_webhook(listen="0.0.0.0",
-    #                       port=int(PORT),
-    #                       url_path=TOKEN)
-    # updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
+    # updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                          port=int(PORT),
+                          url_path=TOKEN)
+    updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
