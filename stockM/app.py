@@ -33,8 +33,8 @@ logger = logging.getLogger(__name__)
 
 # Uncomment this if running locally with a .env file,
 # otherwise ensure that TOKEN has been exported to $PATH
-env_path = Path(".") / ".env"
-load_dotenv(dotenv_path=env_path, verbose=True)
+# env_path = Path(".") / ".env"
+# load_dotenv(dotenv_path=env_path, verbose=True)
 
 PORT = int(os.environ.get("PORT", 5000))
 TOKEN = os.getenv("TOKEN")
