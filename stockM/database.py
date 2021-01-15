@@ -49,6 +49,7 @@ def get_user(session: Session, user_id: int) -> User:
     logger.info(f"Retrieving user info for {user_id}")
     curr_user = session.query(User).filter_by(user_id=user_id).first()
 
+    # Prepare a new User object if the user is not found in DB
     if not curr_user:
         return User(user_id=user_id)
 
