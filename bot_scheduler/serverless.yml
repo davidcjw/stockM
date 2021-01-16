@@ -1,0 +1,36 @@
+# For full config options, check the docs:
+#    docs.serverless.com
+service: bot-scheduler
+app: stockm
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: 20201221
+  # stage: dev
+  # region: ap-southeast-1
+  environment:
+    TOKEN: ${env:TOKEN}
+    DATABASE_URL: ${env:DATABASE_URL}
+
+functions:
+  update_users_SG:
+    handler: handler.update_users
+    events:
+      - schedule: cron(00 10 * * ? *)
+  
+  update_users_US:
+    handler: handler.update_users
+    events:
+      - schedule: cron(00 01 * * ? *)
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
