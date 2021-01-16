@@ -37,8 +37,7 @@ DEFAULT_PORT = {
     "AMZN": 200,
     "BABA": 50
 }
-CHOOSING, TYPING_REPLY, TYPING_CHOICE = range(3)
-UPDATED = 1
+UPDATED = 0
 CHOICE_MAP = {
     "update stock portfolio": "portfolio",
     "update watchlist": "watchlist"
@@ -118,13 +117,14 @@ def start(update: Update, context: CallbackContext) -> None:
     else:
         context.user_data.update(user())
         reply_text += (
-            f"\nYour watchlist is: {user.watchlist}"
-            f"\nYour portfolio is: {user.portfolio}"
+            f"\nYour watchlist is: {user.watchlist.upper()}"
+            f"\nYour portfolio is: {user.portfolio.upper()}"
         )
 
+    subscribed = "YES" if user.is_subscribed else "NO"
+    reply_text += f"\n\nSubscription to daily updates: {subscribed}"
     reply_text += "\n\nHow may I be of service today?"
     update.message.reply_text(reply_text, reply_markup=markup)
-    return CHOOSING
 
 
 def done(update: Update, context: CallbackContext) -> None:
@@ -132,9 +132,10 @@ def done(update: Update, context: CallbackContext) -> None:
         del context.user_data['choice']
 
     update.message.reply_text(
-        f"Thank you for using Stock Bot Slave 😊 ! "
-        f"To update or get updates on your portfolio/watchlist again, "
-        f"please select /start."
+        f"Thank you for using Stock Bot Slave 😊 !\n"
+        f"To get a summary of what you've told me, please select /start.\n"
+        f"To update or get updates on your portfolio/watchlist, please "
+        f"use the markup keyboard."
     )
     return ConversationHandler.END
 
@@ -161,14 +162,7 @@ def update_user(update: Update, context: CallbackContext) -> None:
 
     update.message.reply_text(reply_text)
 
-    return TYPING_REPLY
-
-
-def clear_portfolio(update: Update, context: CallbackContext):
-    update.message.reply_text(
-        "Your portfolio has been cleared!",
-        reply_markup=markup
-    )
+    return UPDATED
 
 
 def provide_updates(update: Update, context: CallbackContext) -> None:
@@ -194,8 +188,6 @@ def provide_updates(update: Update, context: CallbackContext) -> None:
         reply_markup=markup
     )
 
-    return CHOOSING
-
 
 def received_information(update: Update, context: CallbackContext) -> None:
     text = update.message.text
@@ -217,7 +209,7 @@ def received_information(update: Update, context: CallbackContext) -> None:
         reply_markup=markup,
     )
 
-    return CHOOSING
+    return ConversationHandler.END
 
 
 def toggle_subscription(update: Update, context: CallbackContext) -> None:
@@ -276,36 +268,7 @@ def main() -> None:
         name="updates",
         allow_reentry=True,
     )
-    # conv_handler = ConversationHandler(
-    #     entry_points=[CommandHandler("start", start)],
-    #     states={
-    #         CHOOSING: [
-    #             MessageHandler(
-    #                 Filters.regex(
-    #                     '^(Update stock portfolio|Update watchlist)$'
-    #                     ),
-    #                 update_user
-    #             ),
-    #             MessageHandler(
-    #                 Filters.regex(
-    #                     '^(Portfolio updates|Watchlist updates)$'
-    #                     ),
-    #                 provide_updates
-    #             ),
-    #         ],
-    #         TYPING_REPLY: [
-    #             MessageHandler(
-    #                 Filters.text & ~(Filters.command | Filters.regex('^Done$')),
-    #                 received_information,
-    #             )
-    #         ],
-    #     },
-    #     fallbacks=[MessageHandler(Filters.regex('^Done$'), done)],
-    #     name="get_portfolio",
-    #     allow_reentry=True,
-    # )
 
-    # on different commands - answer in Telegram
     dispatcher.add_handler(conv_handler)
     dispatcher.add_handler(
         MessageHandler(
@@ -319,16 +282,18 @@ def main() -> None:
             '^Subscribe/Unsubscribe to daily updates$'
         ), toggle_subscription
     ))
+    dispatcher.add_handler(MessageHandler(Filters.regex('^Done'), done))
+    dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("get_px_change", get_px_change))
     dispatcher.add_handler(CommandHandler("default", get_default_port))
 
     # Start the Bot
     # `start_polling` for local dev; webhook for production
-    updater.start_polling()
-    # updater.start_webhook(listen="0.0.0.0",
-    #                       port=int(PORT),
-    #                       url_path=TOKEN)
-    # updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
+    # updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                          port=int(PORT),
+                          url_path=TOKEN)
+    updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
