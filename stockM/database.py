@@ -4,7 +4,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy import Column, String, BigInteger
+from sqlalchemy import Column, String, BigInteger, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 
@@ -33,11 +33,12 @@ class User(base):
     user_id = Column(BigInteger, primary_key=True)
     portfolio = Column(String)
     watchlist = Column(String)
+    is_subscribed = Column(Boolean)
 
     def __repr__(self):
-        return "<User(user_id='%s', portfolio='%s', watchlist='%s')>" % (
-            self.user_id, self.portfolio, self.watchlist
-        )
+        return "<User(user_id='%s', portfolio='%s', watchlist='%s', " \
+               "is_subscribed='%s')>" % (self.user_id, self.portfolio,
+                                         self.watchlist, self.is_subscribed)
 
     def __call__(self):
         return {
@@ -58,6 +59,7 @@ def get_user(session: Session, user_id: int) -> User:
     logger.info(f"Retrieving user info for {user_id}")
     curr_user = session.query(User).filter_by(user_id=user_id).first()
 
+    # Prepare a new User object if the user is not found in DB
     if not curr_user:
         return User(user_id=user_id)
 
@@ -76,3 +78,8 @@ def update_userdb(session: Session, user: User) -> None:
         logger.info(f"Successfully updated db with {user}")
     except Exception as e:
         logger.error(f"{e}")
+
+
+def get_subscribers(session: Session):
+    subscribers = session.query(User).filter_by(is_subscribed=True).all()
+    return subscribers

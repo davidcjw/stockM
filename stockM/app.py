@@ -6,6 +6,7 @@ from typing import Dict
 from telegram.ext.messagehandler import MessageHandler
 from sqlalchemy.orm import sessionmaker
 
+from telegram import ParseMode
 from telegram import (
     Update,
     ReplyKeyboardMarkup
@@ -45,7 +46,7 @@ CHOICE_MAP = {
 reply_keyboard = [
     ["Update stock portfolio", "Update watchlist"],
     ["Portfolio updates", "Watchlist updates"],
-    ["Done"]
+    ["Subscribe/Unsubscribe to daily updates", "Done"]
 ]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 Session = sessionmaker(db)
@@ -64,9 +65,6 @@ def get_px_change(update: Update,
             stocks = update.message.text.split("/get_px_change")[1].strip()
             stocks = stocks.split()
     elif type == "conversation":
-        if not stocks:
-            update.message.reply_text("No stocks found!")
-            return
         stocks = stocks.split()
 
     for _, stock in enumerate(stocks):
@@ -180,9 +178,17 @@ def provide_updates(update: Update, context: CallbackContext) -> None:
 
     text = update.message.text.lower()
     context.user_data['choice'] = text
-    stocks = context.user_data[text.split()[0]]
-    get_px_change(update=update, context=context, stocks=stocks,
-                  type="conversation")
+
+    # Catch if user tries to get updates before updating portfolio/watchlist
+    if text.split()[0] in context.user_data.keys():
+        stocks = context.user_data[text.split()[0]]
+        get_px_change(update=update, context=context, stocks=stocks,
+                      type="conversation")
+    else:
+        update.message.reply_text(
+            f"No stocks found in your {text.split()[0]}! "
+            f"Please select the update options before getting updates."
+        )
     update.message.reply_text(
         "What would you like to do next?",
         reply_markup=markup
@@ -198,10 +204,10 @@ def received_information(update: Update, context: CallbackContext) -> None:
     del context.user_data['choice']
 
     # Update the database
-    user = update.message.from_user["id"]
-    user_to_update = get_user(session, user)
-    setattr(user_to_update, category, text.lower())
-    update_userdb(session, user_to_update)
+    user_id = update.message.from_user["id"]
+    user = get_user(session, user_id)
+    setattr(user, category, text.lower())
+    update_userdb(session, user)
 
     update.message.reply_text(
         "Neat! Just so you know, this is what you already told me:\n"
@@ -212,6 +218,35 @@ def received_information(update: Update, context: CallbackContext) -> None:
     )
 
     return CHOOSING
+
+
+def toggle_subscription(update: Update, context: CallbackContext) -> None:
+    # Get user & subscription status
+    user_id = update.message.from_user["id"]
+    user = get_user(session, user_id)
+    filler = "" if user.is_subscribed else " not"
+    toggle = "off" if user.is_subscribed else "on"
+    db_update = False if user.is_subscribed else True
+
+    # Update is_subscribed status in DB
+    try:
+        setattr(user, "is_subscribed", db_update)
+        update_userdb(session, user)
+
+        update.message.reply_text(
+            f"📲 *What are daily updates?*\n"
+            f"Daily updates are push notifications informing you of end of "
+            f"day price changes to your portfolio/watchlist stocks. They are "
+            f"sent out daily at 8 PM UTC and 9 AM UTC. These times correspond"
+            f" to US and Singapore market closing times.\n\n"
+            f"Looks like you are{filler} subscribed to daily "
+            f"portfolio/watchlist updates. Toggling subscription status "
+            f"{toggle}.",
+            parse_mode=ParseMode.MARKDOWN
+        )
+    except Exception as e:
+        logger.error(e)
+        update.message.reply_text("Failed to update your subscription status.")
 
 
 def main() -> None:
@@ -279,6 +314,11 @@ def main() -> None:
             ), provide_updates
         )
     )
+    dispatcher.add_handler(MessageHandler(
+        Filters.regex(
+            '^Subscribe/Unsubscribe to daily updates$'
+        ), toggle_subscription
+    ))
     dispatcher.add_handler(CommandHandler("get_px_change", get_px_change))
     dispatcher.add_handler(CommandHandler("default", get_default_port))
 

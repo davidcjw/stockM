@@ -10,29 +10,33 @@ Use telegram to get stock updates regarding your portfolio of stocks.
 
 ### Basic Commands
 
-1. Get price change for a single stock
+1. Update portfolio/watchlist of stocks
+    To update portfolio or watchlist, select the *Update stock portfolio*
+    or *Update watchlist* option from the markup keyboard. Enter the stock(s)
+    that you wish to monitor using their tickers, separated by a space.
+    Example:
+    ```
+    AMZN BABA TSLA CRM ZM SE
+    ```
+
+2. Get portfolio/watchlist updates
+    Using the *Portfolio updates* or *Watchlist updates* options from the
+    same markup keyboard, these commands sends push notifications of daily
+    price changes to the list of stocks you've indicated.
+
+3. Get price change for a single stock
     ```
     /get_px_change <ticker>
     ```
 
-2. Get price change for multiple stocks
+4. Get price change for multiple stocks
     ```
     /get_px_change <ticker1> <ticker2> <ticker3>
     ```
 
-3. Get price change for your default portfolio of stocks. To do so, a `config.yml` file is required to be at the root of the project folder.
-
-    Example `config.yml` file:
-    ```
-    DEFAULT_PORT:
-      <STOCK1>: <STOCK1_HOLDINGS_QTY>
-      AMZN: 1000
-    ```
-
-    This command will then be available in telegram.
-    ```
-    /default
-    ```
+5. Toggle daily notifications using the `Subscribe/Unsubscribe to daily 
+update` option from the markup keyboard. This toggles your daily push 
+notifications on/off.
 
 ## Deployment using Heroku
 ### Via Procfile
@@ -73,6 +77,51 @@ heroku open
 # or can go to the website to manually scale it up
 heroku ps:scale web=1
 ```
+
+## Serverless deployment using AWS Lambda
+
+0. Install serverless (this assumes you have NPM)
+    ```bash
+    npm install -g serverless
+
+    # Check that you have serverless installed
+    serverless --version
+    ```
+
+1. Create a folder to be used for serverless deployment (note: `sls` is
+shorthand for `serverless`)
+    ```bash
+    sls create --template aws-python3 --path <path_to_create>
+    ```
+
+2. To use serverless-python-requirements, we have to first install the plugin.
+Note that since we are using `dockerizedPip` in our custom requirements, we
+also need to have Docker installed.
+    ```bash
+    npm install --save serverless-python-requirements
+    ```
+
+3. Copy over `requirements.txt` and the `stockM` folder to this path we have
+created in step 1 `<path_to_create>`.
+
+4. Export `DATABASE_URL`, `TOKEN` (telegram bot token) and AWS credentials.
+    ```bash
+    export DASEBASE_URL=
+    export TOKEN=
+    export AWS_ACCESS_KEY_ID=
+    export AWS_SECRET_ACCESS_KEY=
+    ```
+
+5. Deploy to serverless.
+    ```bash
+    sls deploy
+    ```
+
+6. (Optional) Test that serverless deployment is working.
+    ```bash
+    sls invoke -f <function>
+    ```
+
 
 ## References
 1. [Python telegram bot - Persistent Conversation Bot][3]
