@@ -72,9 +72,6 @@ def get_px_change(update: Update,
             stocks = update.message.text.split("/get_px_change")[1].strip()
             stocks = stocks.split()
     elif type == "conversation":
-        if not stocks:
-            update.message.reply_text("No stocks found!")
-            return
         stocks = stocks.split()
 
     for _, stock in enumerate(stocks):
@@ -173,9 +170,17 @@ def update_user(update: Update, context: CallbackContext) -> None:
 def provide_updates(update: Update, context: CallbackContext) -> None:
     text = update.message.text.lower()
     context.user_data['choice'] = text
-    stocks = context.user_data[text.split()[0]]
-    get_px_change(update=update, context=context, stocks=stocks,
-                  type="conversation")
+
+    # Catch if user tries to get updates before updating portfolio/watchlist
+    if text.split()[0] in context.user_data.keys():
+        stocks = context.user_data[text.split()[0]]
+        get_px_change(update=update, context=context, stocks=stocks,
+                      type="conversation")
+    else:
+        update.message.reply_text(
+            f"No stocks found in your {text.split()[0]}! "
+            f"Please select the update options before getting updates."
+        )
     update.message.reply_text(
         "What would you like to do next?",
         reply_markup=markup
