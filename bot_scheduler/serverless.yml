@@ -21,12 +21,12 @@ functions:
   update_users_SG:
     handler: handler.update_users
     events:
-      - schedule: cron(00 10 * * ? *)
+      - schedule: cron(00 09 * * ? *)  # 9am UTC = 5pm SGT
   
   update_users_US:
     handler: handler.update_users
     events:
-      - schedule: cron(00 01 * * ? *)
+      - schedule: cron(00 20 * * ? *)  # 8pm UTC = 4pm US
 
 plugins:
   - serverless-python-requirements
