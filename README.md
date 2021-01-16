@@ -34,8 +34,9 @@ Use telegram to get stock updates regarding your portfolio of stocks.
     /get_px_change <ticker1> <ticker2> <ticker3>
     ```
 
-5. Toggle daily notifications
-    This toggles your daily push notifications on/off.
+5. Toggle daily notifications using the `Subscribe/Unsubscribe to daily 
+update` option from the markup keyboard. This toggles your daily push 
+notifications on/off.
 
 ## Deployment using Heroku
 ### Via Procfile
@@ -103,7 +104,7 @@ also need to have Docker installed.
 3. Copy over `requirements.txt` and the `stockM` folder to this path we have
 created in step 1 `<path_to_create>`.
 
-4. Export DATABASE_URL, TOKEN (telegram bot token) and AWS credentials.
+4. Export `DATABASE_URL`, `TOKEN` (telegram bot token) and AWS credentials.
     ```bash
     export DASEBASE_URL=
     export TOKEN=
@@ -114,6 +115,11 @@ created in step 1 `<path_to_create>`.
 5. Deploy to serverless.
     ```bash
     sls deploy
+    ```
+
+6. (Optional) Test that serverless deployment is working.
+    ```bash
+    sls invoke -f <function>
     ```
 
 
