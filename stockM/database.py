@@ -1,6 +1,8 @@
 import os
 import logging
+from pathlib import Path
 
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy import Column, String, BigInteger, Boolean
 from sqlalchemy.ext.declarative import declarative_base
@@ -12,6 +14,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Uncomment this if running locally with a .env file,
+# otherwise ensure that TOKEN has been exported to $PATH
+# env_path = Path(".") / ".env"
+# load_dotenv(dotenv_path=env_path, verbose=True)
+
+TOKEN = os.getenv("TOKEN")
+# DB = os.getenv("DB")
 DATABASE_URL = os.environ["DATABASE_URL"]
 
 db = create_engine(DATABASE_URL)
