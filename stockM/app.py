@@ -59,6 +59,9 @@ def get_px_change(update: Update,
                   context: CallbackContext,
                   stocks: str = None,
                   type: str = "command") -> None:
+    message = f"📈 Here are your current market updates:\n" \
+              f"(Note: there may be a 5-10 minute delay)\n"
+
     if type == "command":
         if not stocks:
             stocks = update.message.text.split("/get_px_change")[1].strip()
@@ -69,12 +72,14 @@ def get_px_change(update: Update,
     for _, stock in enumerate(stocks):
         pct_chng, hist = T.get_price_change(stock)
         if isinstance(pct_chng, float):
-            update.message.reply_text(
-                f"{stock.upper()} closed at {hist[-1]} ({pct_chng}%)"
+            message += (
+                f"\n{stock.upper()} closed at {hist[-1]} ({pct_chng}%)"
             )
         else:
             logger.error(f"No history found for {stock}")
-            update.message.reply_text(f"{pct_chng}")
+            message += f"\n{pct_chng}"
+    
+    update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
 
 
 def get_default_port(update: Update, context: CallbackContext,
