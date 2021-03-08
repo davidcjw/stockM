@@ -57,5 +57,8 @@ def update_users(event, context):
         else:
             summary += "\nNo updates for your watchlist as no stocks found!"
 
-        bot.send_message(chat_id=subscriber.user_id, text=summary,
-                         parse_mode=telegram.ParseMode.MARKDOWN)
+        try:
+            bot.send_message(chat_id=subscriber.user_id, text=summary,
+                             parse_mode=telegram.ParseMode.MARKDOWN)
+        except Exception:
+            print(f"{subscriber.user_id} blocked bot!")
