@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 PORT = int(os.environ.get("PORT", 5000))
 VERB = ["rose", "fell"]
+COLOUR = ["🔴", "🟢"]
 
 DEFAULT_PORT = {
     "AMZN": 200,
@@ -73,7 +74,8 @@ def get_px_change(update: Update,
         pct_chng, hist = T.get_price_change(stock)
         if isinstance(pct_chng, float):
             message += (
-                f"\n{stock.upper()} closed at {hist[-1]} ({pct_chng}%)"
+                f"\n{COLOUR[pct_chng > 0]} {stock.upper()}: {hist[-1]} "
+                f"({pct_chng}%)"
             )
         else:
             logger.error(f"No history found for {stock}")
