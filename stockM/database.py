@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 # Uncomment this if running locally with a .env file,
 # otherwise ensure that TOKEN has been exported to $PATH
-# env_path = Path(".") / ".env"
-# load_dotenv(dotenv_path=env_path, verbose=True)
+env_path = Path(".") / ".env"
+load_dotenv(dotenv_path=env_path, verbose=True)
 
 TOKEN = os.getenv("TOKEN")
 # DB = os.getenv("DB")
@@ -33,7 +33,7 @@ class User(base):
     user_id = Column(BigInteger, primary_key=True)
     portfolio = Column(String)
     watchlist = Column(String)
-    is_subscribed = Column(Boolean)
+    is_subscribed = Column(Boolean, default=True)
 
     def __repr__(self):
         return "<User(user_id='%s', portfolio='%s', watchlist='%s', " \
@@ -43,7 +43,8 @@ class User(base):
     def __call__(self):
         return {
             "portfolio": self.portfolio,
-            "watchlist": self.watchlist
+            "watchlist": self.watchlist,
+            "is_subscribed": self.is_subscribed
         }
 
 

@@ -1,4 +1,5 @@
 import os
+import ast
 import logging
 import locale
 from typing import Dict
@@ -40,11 +41,14 @@ DEFAULT_PORT = {
 }
 UPDATED = 0
 CHOICE_MAP = {
-    "update stock portfolio": "portfolio",
-    "update watchlist": "watchlist"
+    "remove from stock portfolio": "-portfolio",
+    "add to stock portfolio": "+portfolio",
+    "add to watchlist": "+watchlist",
+    "remove from watchlist": "-watchlist"
 }
 reply_keyboard = [
-    ["Update stock portfolio", "Update watchlist"],
+    ["Add to stock portfolio", "Add to watchlist"],
+    ["Remove from stock portfolio", "Remove from watchlist"],
     ["Portfolio updates", "Watchlist updates"],
     ["Subscribe/Unsubscribe to daily updates", "Done"]
 ]
@@ -68,7 +72,7 @@ def get_px_change(update: Update,
             stocks = update.message.text.split("/get_px_change")[1].strip()
             stocks = stocks.split()
     elif type == "conversation":
-        stocks = stocks.split()
+        stocks = ast.literal_eval(stocks)
 
     for _, stock in enumerate(stocks):
         pct_chng, hist = T.get_price_change(stock)
@@ -161,10 +165,8 @@ def update_user(update: Update, context: CallbackContext) -> None:
         )
     else:
         reply_text = (
-            f'You want to {text}? Please let me know of your '
-            f'portfolio/watchlist in the following format: '
-            f'Use ticker(s) only, separated by space. Example:\n\n'
-            f'AMZN TSLA BABA'
+            f'You want to {text}? Please add or remove stocks '
+            f'one at a time specifying the ticker! Example: \n\n AMZN'
         )
 
     update.message.reply_text(reply_text)
@@ -183,6 +185,7 @@ def provide_updates(update: Update, context: CallbackContext) -> None:
     # Catch if user tries to get updates before updating portfolio/watchlist
     if text.split()[0] in context.user_data.keys():
         stocks = context.user_data[text.split()[0]]
+
         get_px_change(update=update, context=context, stocks=stocks,
                       type="conversation")
     else:
@@ -199,14 +202,30 @@ def provide_updates(update: Update, context: CallbackContext) -> None:
 def received_information(update: Update, context: CallbackContext) -> None:
     text = update.message.text
     category = context.user_data['choice']
-    context.user_data[category] = text.lower()
-    del context.user_data['choice']
+    choice, category = category[0], category[1:]
 
-    # Update the database
+    # Get the user from DB
     user_id = update.message.from_user["id"]
     user = get_user(session, user_id)
-    setattr(user, category, text.lower())
+
+    # Check if add or remove to portfolio or watchlist
+    if category == "portfolio":
+        to_update = ast.literal_eval(getattr(user, category))
+    elif category == "watchlist":
+        to_update = ast.literal_eval(getattr(user, category))
+
+    if choice == "-":
+        to_update.remove(text.lower())
+    else:
+        to_update.append(text.lower())
+
+    # Update the database
+    setattr(user, category, str(to_update))
     update_userdb(session, user)
+
+    # Update the context data for facts_to_str
+    context.user_data[category] = str(to_update)
+    del context.user_data['choice']
 
     update.message.reply_text(
         "Neat! Just so you know, this is what you already told me:\n"
@@ -259,7 +278,7 @@ def main() -> None:
         entry_points=[
             MessageHandler(
                Filters.regex(
-                '^(Update stock portfolio|Update watchlist)$'
+                '^(Add to stock portfolio|Add to watchlist|Remove from watchlist|Remove from stock portfolio)$'
                 ), update_user
             )
         ],
@@ -296,11 +315,11 @@ def main() -> None:
 
     # Start the Bot
     # `start_polling` for local dev; webhook for production
-    # updater.start_polling()
-    updater.start_webhook(listen="0.0.0.0",
-                          port=int(PORT),
-                          url_path=TOKEN)
-    updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
+    updater.start_polling()
+    # updater.start_webhook(listen="0.0.0.0",
+    #                       port=int(PORT),
+    #                       url_path=TOKEN)
+    # updater.bot.setWebhook("https://telegram-stockm.herokuapp.com/" + TOKEN)
 
     # Block until the user presses Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
