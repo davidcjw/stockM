@@ -106,12 +106,17 @@ def get_default_port(update: Update, context: CallbackContext,
 
 
 def facts_to_str(user_data):
-    facts = list()
+    facts = "📝 Portfolio: \n\n"
+    port = ast.literal_eval(user_data["portfolio"])
+    facts += "\n".join(p.upper() for p in port)
 
-    for key, value in user_data.items():
-        facts.append(f'{key} - {value}')
+    facts += "\n\n👀 Watchlist: \n\n"
+    watch = ast.literal_eval(user_data["watchlist"])
+    facts += "\n".join(p.upper() for p in watch)
 
-    return "\n".join(facts).join(['\n', '\n'])
+    facts += f"\n\n Subscribed: {user_data['is_subscribed']}"
+
+    return facts
 
 
 def start(update: Update, context: CallbackContext) -> None:
