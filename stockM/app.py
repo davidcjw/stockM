@@ -114,7 +114,8 @@ def facts_to_str(user_data):
     watch = ast.literal_eval(user_data["watchlist"])
     facts += "\n".join(p.upper() for p in watch)
 
-    facts += f"\n\nSubscribed: {user_data['is_subscribed']}\n"
+    subscribed = "YES" if user_data["is_subscribed"] else "NO"
+    facts += f"\n\nSubscription to daily updates: {subscribed}\n"
 
     return facts
 
@@ -134,12 +135,8 @@ def start(update: Update, context: CallbackContext) -> None:
         context.user_data.update(user())
         reply_text += (
             f"{facts_to_str(context.user_data)}"
-            # f"\nYour watchlist is: {user.watchlist.upper()}"
-            # f"\nYour portfolio is: {user.portfolio.upper()}"
         )
 
-    subscribed = "YES" if user.is_subscribed else "NO"
-    reply_text += f"\n\nSubscription to daily updates: {subscribed}"
     reply_text += "\n\nHow may I be of service today?"
     update.message.reply_text(reply_text, reply_markup=markup)
 
