@@ -1,4 +1,5 @@
 import os
+import ast
 from datetime import date
 
 import telegram
@@ -28,7 +29,7 @@ def update_users(event, context):
 
         # Portfolio updates
         if port:
-            port = port.split()
+            port = ast.literal_eval(port)
             for _, stock in enumerate(port):
                 pct_chng, hist = T.get_price_change(stock)
                 if isinstance(pct_chng, float):
@@ -44,7 +45,7 @@ def update_users(event, context):
         # Watchlist updates
         summary += "\n\n🔖 *Watchlist updates*:\n"
         if watchlist:
-            watchlist = watchlist.split()
+            watchlist = ast.literal_eval(watchlist)
             for _, stock in enumerate(watchlist):
                 pct_chng, hist = T.get_price_change(stock)
                 if isinstance(pct_chng, float):
