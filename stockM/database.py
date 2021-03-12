@@ -31,8 +31,8 @@ class User(base):
     __tablename__ = "users"
 
     user_id = Column(BigInteger, primary_key=True)
-    portfolio = Column(String, default="['test']")
-    watchlist = Column(String, default="['test']")
+    portfolio = Column(String)
+    watchlist = Column(String)
     is_subscribed = Column(Boolean, default=True)
 
     def __repr__(self):
@@ -62,7 +62,7 @@ def get_user(session: Session, user_id: int) -> User:
 
     # Prepare a new User object if the user is not found in DB
     if not curr_user:
-        return User(user_id=user_id)
+        return User(user_id=user_id, portfolio="[]", watchlist="[]")
 
     return curr_user
 
