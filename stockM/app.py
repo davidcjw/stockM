@@ -169,7 +169,8 @@ def update_user(update: Update, context: CallbackContext) -> None:
     else:
         reply_text = (
             f'You want to {text}? Please add or remove stocks '
-            f'one at a time specifying the ticker! Example: \n\n AMZN'
+            f'by listing them by their ticker, separated by a space.' 
+            f'Example: \n\n AMZN BABA TSLA'
         )
 
     update.message.reply_text(reply_text)
@@ -203,7 +204,7 @@ def provide_updates(update: Update, context: CallbackContext) -> None:
 
 
 def received_information(update: Update, context: CallbackContext) -> None:
-    text = update.message.text
+    stocks = (update.message.text).lower().split()
     category = context.user_data['choice']
     choice, category = category[0], category[1:]
 
@@ -219,9 +220,11 @@ def received_information(update: Update, context: CallbackContext) -> None:
 
     try:
         if choice == "-":
-            to_update.remove(text.lower())
+            for stock in stocks:
+                to_update.remove(stock)
         else:
-            to_update.append(text.lower())
+            for stock in stocks:
+                to_update.append(stock)
         
         # Update the database
         setattr(user, category, str(to_update))
@@ -240,8 +243,8 @@ def received_information(update: Update, context: CallbackContext) -> None:
         )
     except:
         update.message.reply_text(
-            f"Failed to update your {category} with {text.lower()}!"
-            f"\n\nPlease check if {text.lower()} exists in your {category}."
+            f"Failed to update your {category} with {stock}!"
+            f"\n\nPlease check if {stock} exists in your {category}."
         )
 
     return ConversationHandler.END
