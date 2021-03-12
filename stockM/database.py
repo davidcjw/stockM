@@ -31,8 +31,8 @@ class User(base):
     __tablename__ = "users"
 
     user_id = Column(BigInteger, primary_key=True)
-    portfolio = Column(String)
-    watchlist = Column(String)
+    portfolio = Column(String, default=[])
+    watchlist = Column(String, default=[])
     is_subscribed = Column(Boolean, default=True)
 
     def __repr__(self):
