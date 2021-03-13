@@ -169,7 +169,7 @@ def update_user(update: Update, context: CallbackContext) -> None:
     else:
         reply_text = (
             f'You want to {text}? Please add or remove stocks '
-            f'by listing them by their ticker, separated by a space.' 
+            f'by listing them by their ticker, separated by a space. ' 
             f'Example: \n\n AMZN BABA TSLA'
         )
 
@@ -218,34 +218,34 @@ def received_information(update: Update, context: CallbackContext) -> None:
     elif category == "watchlist":
         to_update = ast.literal_eval(getattr(user, category))
 
-    try:
-        if choice == "-":
-            for stock in stocks:
+    for stock in stocks:
+        try:
+            if choice == "-":
                 to_update.remove(stock)
-        else:
-            for stock in stocks:
+            else:
                 to_update.append(stock)
         
-        # Update the database
-        setattr(user, category, str(to_update))
-        update_userdb(session, user)
+            # Update the database
+            setattr(user, category, str(to_update))
+            update_userdb(session, user)
 
-        # Update the context data for facts_to_str
-        context.user_data[category] = str(to_update)
-        del context.user_data['choice']
+            # Update the context data for facts_to_str
+            context.user_data[category] = str(to_update)
+            del context.user_data['choice']
 
-        update.message.reply_text(
-            "Neat! Just so you know, this is what you already told me:\n"
-            f"{facts_to_str(context.user_data)}\n"
-            "You can tell me more, or change your opinion on "
-            "something.",
-            reply_markup=markup,
-        )
-    except:
-        update.message.reply_text(
-            f"Failed to update your {category} with {stock}!"
-            f"\n\nPlease check if {stock} exists in your {category}."
-        )
+        except:
+            update.message.reply_text(
+                f"Failed to update your {category} with {stock}!"
+                f"\n\nPlease check if {stock} exists in your {category}."
+            )
+
+    update.message.reply_text(
+        "Neat! Just so you know, this is what you already told me:\n"
+        f"{facts_to_str(context.user_data)}\n"
+        "You can tell me more, or change your opinion on "
+        "something.",
+        reply_markup=markup,
+    )
 
     return ConversationHandler.END
 
