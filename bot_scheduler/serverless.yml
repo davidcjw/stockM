@@ -11,7 +11,7 @@ provider:
   name: aws
   runtime: python3.8
   lambdaHashingVersion: 20201221
-  timeout: 20
+  timeout: 60
   # stage: dev
   # region: ap-southeast-1
   environment:
