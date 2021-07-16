@@ -46,7 +46,7 @@ class Ticker:
         if not hist:
             return f"Couldn't find history for ticker {ticker}", None
         pct_chng = ((hist[-1] - hist[0]) / hist[0]) * 100
-        return np.round(pct_chng, 2), hist
+        return np.round(pct_chng, 2), np.round(hist, 2)
 
     @classmethod
     def construct_portfolio(cls, stocks: Dict = TEST_DICT):

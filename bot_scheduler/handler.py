@@ -22,6 +22,7 @@ VERB = ["🔴", "🟢"]
 def update_users(event, context):
     subscribers = get_subscribers(session)
     for subscriber in subscribers:
+        print(f"Getting info for {subscriber.user_id}")
         summary = f"📈 Here is your market close summary for {today}\n\n" \
                   f"🗂 *Portfolio Updates*:\n"
         # Send out updates for each subscriber
