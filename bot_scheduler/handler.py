@@ -6,12 +6,12 @@ import telegram
 from sqlalchemy.orm import sessionmaker
 
 from stockM import Ticker as T
-from stockM.database import get_subscribers, db
+from stockM.database import get_subscribers, get_db, unsubscribe_user
 
 TOKEN = os.getenv("TOKEN")
 
-Session = sessionmaker(db)
-session = Session()
+Session = sessionmaker(get_db)
+db = Session()
 
 bot = telegram.Bot(token=TOKEN)
 
@@ -20,7 +20,7 @@ VERB = ["🔴", "🟢"]
 
 
 def update_users(event, context):
-    subscribers = get_subscribers(session)
+    subscribers = get_subscribers(db)
     for subscriber in subscribers:
         print(f"Getting info for {subscriber.user_id}")
         summary = f"📈 Here is your market close summary for {today}\n\n" \
@@ -63,4 +63,5 @@ def update_users(event, context):
             bot.send_message(chat_id=subscriber.user_id, text=summary,
                              parse_mode=telegram.ParseMode.MARKDOWN)
         except Exception:
-            print(f"{subscriber.user_id} blocked bot!")
+            print(f"{subscriber.user_id} removed bot! Unsubcribing...")
+            unsubscribe_user(db, subscriber)

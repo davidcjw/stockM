@@ -23,7 +23,7 @@ TOKEN = os.getenv("TOKEN")
 # DB = os.getenv("DB")
 DATABASE_URL = os.environ["DATABASE_URL"]
 
-db = create_engine(DATABASE_URL)
+get_db = create_engine(DATABASE_URL)
 base = declarative_base()
 
 
@@ -48,7 +48,7 @@ class User(base):
         }
 
 
-def get_user(session: Session, user_id: int) -> User:
+def get_user(db: Session, user_id: int) -> User:
     """Queries a user from the database
 
     Args:
@@ -58,7 +58,7 @@ def get_user(session: Session, user_id: int) -> User:
         User: Instance of User class
     """
     logger.info(f"Retrieving user info for {user_id}")
-    curr_user = session.query(User).filter_by(user_id=user_id).first()
+    curr_user = db.query(User).filter_by(user_id=user_id).first()
 
     # Prepare a new User object if the user is not found in DB
     if not curr_user:
@@ -67,20 +67,31 @@ def get_user(session: Session, user_id: int) -> User:
     return curr_user
 
 
-def update_userdb(session: Session, user: User) -> None:
+def update_userdb(db: Session, user: User) -> None:
     """Creates a User object within session before commit()
 
     Args:
         user_id (int): User's telegram ID
     """
     try:
-        session.add(user)
-        session.commit()
+        db.add(user)
+        db.commit()
         logger.info(f"Successfully updated db with {user}")
     except Exception as e:
         logger.error(f"{e}")
 
 
-def get_subscribers(session: Session):
-    subscribers = session.query(User).filter_by(is_subscribed=True).all()
+def get_subscribers(db: Session):
+    subscribers = db.query(User).filter_by(is_subscribed=True).all()
     return subscribers
+
+
+def unsubscribe_user(db: Session, user: User) -> None:
+    """
+    Unsubscribe a user if he/she has removed the bot from the
+    Telegram application
+    """
+    db.query(User).filter_by(user_id=user.user_id).update({
+        "is_subscribed": False
+    })
+    db.commit()
